@@ -13,7 +13,7 @@ import java.util.Optional;
  * @author elizcano
  */
 @Repository
-public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
+public interface MessageRepository extends JpaRepository<MessageEntity, String> {
 
     /**
      * Método para recuperar objeto satelite de la base de datos
@@ -21,5 +21,5 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
      * @param satellite
      * @return
      */
-    public List<MessageEntity> findBySatelliteOrderByMessageDate(SatelliteEntity satellite);
+    public List<MessageEntity> findBySatelliteOrderByMessageDateDesc(SatelliteEntity satellite);
 }

@@ -35,6 +35,13 @@ public class ComunicationCenterService {
     @Autowired
     private MessageRepository messageRepository;
 
+    /**
+     * Método que recibe los datos enviados de los satélites para proceder a descifrarlos e
+     * intentar obtener la ubicación del emisor
+     *
+     * @param dataIn
+     * @return
+     */
     public ResponseEntity<MessageOutDto> topSecret(SatelliteInDto dataIn){
         MessageOutDto out = new MessageOutDto();
         List<List<String>> listMsgs = dataIn.getSatellites()
@@ -50,7 +57,6 @@ public class ComunicationCenterService {
             LOGGER.warn("No hay suficiente información para decodificar el mensaje");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-
         PositionDto p1 = getSatellitePosition(dataIn.getSatellites().get(0).getName(), dataIn.getSatellites().get(0).getDistance());
         PositionDto p2 = getSatellitePosition(dataIn.getSatellites().get(1).getName(), dataIn.getSatellites().get(1).getDistance());
         PositionDto p3 = getSatellitePosition(dataIn.getSatellites().get(2).getName(), dataIn.getSatellites().get(2).getDistance());
@@ -67,6 +73,9 @@ public class ComunicationCenterService {
      * Función para calcular posición del emisor segun los puntos del satélite y distancia con
      * respecto al emisor
      * Se utiliza el método de Trilateración para obtener la posición del emisor en un plano de dos dimensiones
+     *
+     * Algoritmo de: Radhika S. Grover
+     * Libro: "Programming with Java: A Multimedia Approach"
      *
      * @param p1
      * @param p2
@@ -130,6 +139,13 @@ public class ComunicationCenterService {
                 .orElse(null);
     }
 
+    /**
+     * Método que recibe la información parcial de un satelite
+     * para almacenarla en la base de datos
+     *
+     * @param messageInDto
+     * @return
+     */
     public ResponseEntity topSecretSplit(MessageInDto messageInDto) {
         Optional<SatelliteEntity> optSatellite = satelliteRepository.findBySatelliteName(messageInDto.getName());
         if(!optSatellite.isPresent()) return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
@@ -144,12 +160,18 @@ public class ComunicationCenterService {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
+    /**
+     * Método para obtener los ultimos mensajes guardados de los satelites registrados
+     * para intentar obtener el mensaje decodificado
+     *
+     * @return
+     */
     public ResponseEntity topSecretGet() {
         List<SatelliteEntity> satelliteList = satelliteRepository.findAll();
         List<List<String>> listaMess = new ArrayList<>();
         MessageOutDto out = new MessageOutDto();
         List<PositionDto> pointsList = satelliteList.stream().map(item -> {
-            Optional<MessageEntity> optMess = messageRepository.findBySatelliteOrderByMessageDate(item).stream().findFirst();
+            Optional<MessageEntity> optMess = messageRepository.findBySatelliteOrderByMessageDateDesc(item).stream().findFirst();
             PositionDto p = null;
             if(optMess.isPresent()){
                 listaMess.add(Arrays.asList(optMess.get().getMessageData().split(",")));
